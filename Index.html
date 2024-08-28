@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WilsonTv</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f3f3;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            text-align: center;
+            padding: 20px;
+            background-color: #333;
+            color: white;
+            margin: 0;
+        }
+        #partidos {
+            list-style-type: none;
+            padding: 20px;
+        }
+        .partido {
+            display: flex;
+            align-items: center;
+            background-color: white;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .partido img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            margin-right: 15px;
+        }
+        .partido-info {
+            flex-grow: 1;
+        }
+        .partido-info h2 {
+            margin: 0;
+            font-size: 18px;
+            color: #333;
+        }
+        .partido-info p {
+            margin: 5px 0;
+            color: #555;
+        }
+        .partido-info a {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 12px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .partido-info a:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>WilsonTv - Partidos en Vivo</h1>
+    <ul id="partidos"></ul>
+
+    <script>
+        function convertirHoraYangonAColombia(horaYangon) {
+    const [horas, minutos] = horaYangon.split(':').map(Number);
+    // Crear una fecha con la hora de Yangon
+    const fechaYangon = new Date(Date.UTC(1970, 0, 1, horas, minutos));
+    // Restar 11 horas y 30 minutos para convertirla a la hora de Colombia
+    fechaYangon.setUTCHours(fechaYangon.getUTCHours() - 11);
+    fechaYangon.setUTCMinutes(fechaYangon.getUTCMinutes() - 30);
+    // Obtener la hora y minutos en formato de 2 dígitos
+    const horasColombia = fechaYangon.getUTCHours().toString().padStart(2, '0');
+    const minutosColombia = fechaYangon.getUTCMinutes().toString().padStart(2, '0');
+    return `${horasColombia}:${minutosColombia}`;
+}
+
+        fetch("https://football-live-stream-api.p.rapidapi.com/index.php", {
+            headers: {
+                "x-rapidapi-host": "football-live-stream-api.p.rapidapi.com",
+                "x-rapidapi-key": "d6e35b2d8fmshe073db8bd003f0fp1bb810jsnd0b637b87d25"
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const lista = document.getElementById("partidos");
+            const ligasInteres = ['Spanish La Liga', 'UEFA Champions League'];
+            const partidosFiltrados = data.filter(partido => ligasInteres.includes(partido.league));
+
+            partidosFiltrados.forEach(partido => {
+                const url = `https://football-live-stream-api.p.rapidapi.com/stream.php?id=${partido.id}`;
+                const options = {
+                    method: 'GET',
+                    headers: {
+                        'x-rapidapi-key': "d6e35b2d8fmshe073db8bd003f0fp1bb810jsnd0b637b87d25",
+                        'x-rapidapi-host': "football-live-stream-api.p.rapidapi.com"
+                    }
+                };
+
+                fetch(url, options)
+                    .then(response => response.json())
+                    .then(result => {
+                        const stream = result.length > 0 ? result[0].stream_link : 'No disponible';
+                        const elemento = document.createElement("li");
+                        elemento.classList.add("partido");
+
+                        // Convertir la hora a la zona horaria de Colombia
+                        const horaYangon = partido.time; // Hora recibida en formato HH:mm
+                        const horaColombia = convertirHoraYangonAColombia(horaYangon);
+                     //   console.log("Hora en Colombia:", horaColombia); // Mostrar la hora en Colombia en la consola
+//console.log("Hora en Asia/Yangon:", partido.time);
+                        // Aquí se agrega la información del partido al DOM
+                        elemento.innerHTML = `
+                            <img src="${partido.home_logo || 'default-home-logo.png'}" alt="${partido.home_name} logo">
+                            <img src="${partido.away_logo || 'default-away-logo.png'}" alt="${partido.away_name} logo">
+                            <div class="partido-info">
+                                <h2>${partido.home_name} vs ${partido.away_name}</h2>
+                                <p>Liga: ${partido.league}</p>
+                                <p>Hora: ${horaColombia}</p>
+                                <a href="${stream}" target="_blank">${stream !== 'No disponible' ? 'Enlace de transmisión' : 'No disponible'}</a>
+                            </div>
+                        `;
+                        lista.appendChild(elemento);
+                    })
+                    .catch(error => console.error('Error fetching stream URL:', error));
+            });
+        })
+        .catch(error => console.error('Error fetching partidos:', error));
+    </script>
+</body>
+</html>
