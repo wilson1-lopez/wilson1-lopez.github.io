@@ -76,7 +76,7 @@
     const fechaYangon = new Date(Date.UTC(1970, 0, 1, horas, minutos));
     // Restar 11 horas y 30 minutos para convertirla a la hora de Colombia
     fechaYangon.setUTCHours(fechaYangon.getUTCHours() - 11);
-    fechaYangon.setUTCMinutes(fechaYangon.getUTCMinutes() - 30);
+    fechaYangon.setUTCMinutes(fechaYangon.getUTCMinutes() - 60);
     // Obtener la hora y minutos en formato de 2 dígitos
     const horasColombia = fechaYangon.getUTCHours().toString().padStart(2, '0');
     const minutosColombia = fechaYangon.getUTCMinutes().toString().padStart(2, '0');
